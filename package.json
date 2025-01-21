@@ -1,6 +1,6 @@
 {
   "name": "svguitar",
-  "version": "1.0.0-development",
+  "version": "2.4.2",
   "description": "Library to create beautiful SVG guitar chord charts.",
   "keywords": [
     "guitar",

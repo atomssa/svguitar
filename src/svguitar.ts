@@ -83,11 +83,16 @@ export const OPEN: OpenString = 0
 export const SILENT: SilentString = 'x'
 
 /**
- * Possible positions of the fret label (eg. "3fr").
+ * Possible positions of the fret label
  */
 export enum FretLabelPosition {
-  LEFT = 'left',
-  RIGHT = 'right',
+  LEFT = 'left',  // next to e chord
+  RIGHT = 'right',  // next to E chord
+}
+
+export enum FretLabelPlacement {
+  MIDDLE = 'middle', // between fret-1 and fret
+  END = 'end', // on fret
 }
 
 export type FretMarker = DoubleFretMarker | SingleFretMarker | number
@@ -255,6 +260,16 @@ export interface ChordSettings {
    * The position of the fret label (eg. "3fr")
    */
   fretLabelPosition?: FretLabelPosition
+
+  /**
+   * The placement of the fret label (between frets or on fret)
+   */
+  fretLabelPlacement?: FretLabelPlacement
+
+  /**
+   * The offset of fret label w/r/t position
+   */
+  fretLabelPositionOffset?: number
 
   /**
    * The font size of the fret label
@@ -756,13 +771,16 @@ export class SVGuitarChord {
     const stringXPositions = this.stringXPos()
     const endX = stringXPositions[stringXPositions.length - 1]
     const startX = stringXPositions[0]
-    const text = `${position}fr`
+    const positionOffset = this.settings.fretLabelPositionOffset ?? 0
+    const text = `${position + positionOffset}fr`
     const size = this.settings.fretLabelFontSize ?? defaultSettings.fretLabelFontSize
     const color = this.settings.fretLabelColor ?? this.settings.color ?? defaultSettings.color
     const fingerSize =
       this.stringSpacing() * (this.settings.fingerSize ?? defaultSettings.fingerSize)
     const fontFamily = this.settings.fontFamily ?? defaultSettings.fontFamily
     const fretLabelPosition = this.settings.fretLabelPosition ?? defaultSettings.fretLabelPosition
+    const fretSpacing = this.stringSpacing() * (this.settings.fretSize ?? 1)
+    const fretLabelPlacement = (this.settings.fretLabelPlacement ?? FretLabelPlacement.END) === FretLabelPlacement.END ? 0: -0.5
 
     // add some padding relative to the string spacing. Also make sure the padding is at least
     // 1/2 fingerSize plus some padding to prevent the finger overlapping the position label.
@@ -782,7 +800,7 @@ export class SVGuitarChord {
           const svgText = this.renderer.text(
             text,
             endX + padding,
-            y,
+            y + ((positionOffset + fretLabelPlacement) * fretSpacing),
             size * sizeMultiplier,
             color,
             fontFamily,
@@ -799,7 +817,7 @@ export class SVGuitarChord {
           const svgText = this.renderer.text(
             text,
             1 / sizeMultiplier + startX - padding,
-            y,
+            y -  ((positionOffset + fretLabelPlacement) * fretSpacing),
             size * sizeMultiplier,
             color,
             fontFamily,
@@ -823,8 +841,8 @@ export class SVGuitarChord {
     // Horizontal orientation
     const { x: textX, y: textY } =
       fretLabelPosition === FretLabelPosition.RIGHT
-        ? this.coordinates(endX + padding, y)
-        : this.coordinates(startX - padding, y)
+        ? this.coordinates(endX + padding, y +  ((positionOffset + fretLabelPlacement) * fretSpacing))
+        : this.coordinates(startX - padding, y +  ((positionOffset + fretLabelPlacement) * fretSpacing))
     this.renderer.text(
       text,
       textX,
@@ -1205,7 +1223,7 @@ export class SVGuitarChord {
     if (this.settings.showFretMarkers ?? defaultSettings.showFretMarkers) {
       this.settings.fretMarkers
       ?.forEach((fretMarker) => {
-        const fretMarkerOptions = (typeof fretMarker == 'number' ? {
+        const fretMarkerOptions = (typeof fretMarker === 'number' ? {
           fret: fretMarker,
         } : fretMarker) as DoubleFretMarker | SingleFretMarker
 
