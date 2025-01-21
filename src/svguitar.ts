@@ -764,7 +764,7 @@ export class SVGuitarChord {
       this.chordInternal.position ?? this.settings.position ?? defaultSettings.position
     const noPosition = this.settings.noPosition ?? defaultSettings.noPosition
 
-    if (position <= 1 || noPosition) {
+    if (position < 1 || noPosition) {
       return
     }
 
@@ -888,7 +888,7 @@ export class SVGuitarChord {
     const noPositon = this.settings.noPosition ?? defaultSettings.noPosition
 
     let fretSize: number
-    if (position > 1 || noPositon) {
+    if (position > 0 || noPositon) {
       fretSize = strokeWidth
     } else {
       fretSize = nutWidth
